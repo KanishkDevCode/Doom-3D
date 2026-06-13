@@ -9,6 +9,7 @@ class Player:
         self.angle = PLAYER_ANGLE
         self.shot = False
         self.health = PLAYER_MAX_HEALTH
+        self.ammo = 20
         self.rel = 0
         self.health_recovery_delay = 700
         self.time_prev = pg.time.get_ticks()
@@ -25,10 +26,7 @@ class Player:
 
     def check_game_over(self):
         if self.health < 1:
-            self.game.object_renderer.game_over()
-            pg.display.flip()
-            pg.time.delay(1500)
-            self.game.new_game()
+            self.game.state = 'GAME_OVER'
 
     def get_damage(self, damage):
         self.health -= damage
@@ -38,10 +36,11 @@ class Player:
 
     def single_fire_event(self, event):
         if event.type == pg.MOUSEBUTTONDOWN:
-            if event.button == 1 and not self.shot and not self.game.weapon.reloading:
+            if event.button == 1 and not self.shot and not self.game.weapon.reloading and self.ammo > 0:
                 self.game.sound.shotgun.play()
                 self.shot = True
                 self.game.weapon.reloading = True
+                self.ammo -= 1
 
     def movement(self):
         sin_a = math.sin(self.angle)
@@ -96,7 +95,7 @@ class Player:
             pg.mouse.set_pos([HALF_WIDTH, HALF_HEIGHT])
         self.rel = pg.mouse.get_rel()[0]
         self.rel = max(-MOUSE_MAX_REL, min(MOUSE_MAX_REL, self.rel))
-        self.angle += self.rel * MOUSE_SENSITIVITY * self.game.delta_time
+        self.angle += self.rel * self.game.mouse_sensitivity * self.game.delta_time
 
     def update(self):
         self.movement()
